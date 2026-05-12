@@ -1,4 +1,4 @@
-name: Build Android APK
+name: Build APK
 on: [push]
 jobs:
   build:
@@ -10,19 +10,41 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-      
-      # Этот шаг сам создаст правильную структуру папок и файлы
-      - name: Create Project Structure
+
+      - name: Setup Project and Gradle
         run: |
-          mkdir -p app/src/main/java/com/ducklumo
-          
+          # Создаем настройки проекта
           echo "include ':app'" > settings.gradle
           
+          # Генерируем правильный gradlew программно внутри сервера
+          gradle wrapper --gradle-version 8.2
+          
+          mkdir -p app/src/main/java/com/ducklumo
+          
+          cat <<EOF > build.gradle
+          buildscript {
+              repositories { google(); mavenCentral() }
+              dependencies { classpath 'com.android.tools.build:gradle:8.1.1' }
+          }
+          allprojects {
+              repositories { google(); mavenCentral() }
+          }
+          EOF
+
+          cat <<EOF > app/build.gradle
+          plugins { id 'com.android.application' }
+          android {
+              namespace 'com.ducklumo'
+              compileSdk 34
+              defaultConfig { applicationId "com.ducklumo"; minSdk 24; targetSdk 34; versionCode 1; versionName "1.0" }
+          }
+          EOF
+
           cat <<EOF > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
-          <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.ducklumo">
+          <manifest xmlns:android="http://schemas.android.com/apk/res/android">
               <uses-permission android:name="android.permission.INTERNET" />
-              <application android:label="DuckLumo" android:theme="@style/Theme.AppCompat.NoActionBar">
+              <application android:label="DuckLumo">
                   <activity android:name=".MainActivity" android:exported="true">
                       <intent-filter>
                           <action android:name="android.intent.action.MAIN" />
@@ -42,21 +64,23 @@ jobs:
           class MainActivity : AppCompatActivity() {
               override fun onCreate(savedInstanceState: Bundle?) {
                   super.onCreate(savedInstanceState)
-                  val webView = WebView(this)
-                  webView.settings.javaScriptEnabled = true
-                  webView.settings.domStorageEnabled = true
-                  webView.settings.userAgentString = "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
-                  webView.webViewClient = WebViewClient()
-                  webView.loadUrl("https://duck.ai")
-                  setContentView(webView)
+                  val web = WebView(this)
+                  web.settings.javaScriptEnabled = true
+                  web.settings.domStorageEnabled = true
+                  web.webViewClient = WebViewClient()
+                  web.loadUrl("https://duck.ai")
+                  setContentView(web)
               }
           }
           EOF
 
-      - name: Build with Gradle
-        run: chmod +x gradlew && ./gradlew assembleDebug
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: ducklumo-app
+          name: ducklumo-apk
           path: app/build/outputs/apk/debug/*.apk
