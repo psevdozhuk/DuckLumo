@@ -1,0 +1,28 @@
+// Это упрощенная логика твоего приложения "DuckLumo"
+import android.os.Bundle
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        val webView = WebView(this)
+        webView.settings.javaScriptEnabled = true
+        webView.settings.domStorageEnabled = true
+        
+        // Маскируемся под мобильный браузер, чтобы DDG работал корректно
+        webView.settings.userAgentString = "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Mobile Safari/537.36"
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView?, url: String?) {
+                // Здесь можно вставить скрипт для авто-выбора модели GPT-OSS 120B
+                view?.evaluateJavascript("console.log('DuckLumo Ready');", null)
+            }
+        }
+
+        webView.loadUrl("https://duck.ai")
+        setContentView(webView)
+    }
+}
