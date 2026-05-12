@@ -13,12 +13,13 @@ jobs:
 
       - name: Create Project Structure
         run: |
-          # Сначала создаем все папки
+          # Создаем структуру папок
           mkdir -p app/src/main/java/com/ducklumo
           
-          # Затем создаем файлы настроек
+          # Настройки проекта
           echo "include ':app'" > settings.gradle
           
+          # Корневой build.gradle
           cat <<EOF > build.gradle
           buildscript {
               repositories { google(); mavenCentral() }
@@ -29,6 +30,7 @@ jobs:
           }
           EOF
 
+          # build.gradle для приложения
           cat <<EOF > app/build.gradle
           plugins { id 'com.android.application' }
           android {
@@ -44,6 +46,7 @@ jobs:
           }
           EOF
 
+          # Манифест
           cat <<EOF > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -59,6 +62,7 @@ jobs:
           </manifest>
           EOF
 
+          # Код приложения
           cat <<EOF > app/src/main/java/com/ducklumo/MainActivity.kt
           package com.ducklumo
           import android.os.Bundle
@@ -78,13 +82,10 @@ jobs:
           }
           EOF
 
-      - name: Setup Gradle
-        run: gradle wrapper --gradle-version 8.2
-
-      - name: Build APK
+      - name: Build with Gradle
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug
+          # Используем предустановленный в системе gradle для сборки
+          gradle assembleDebug
         
       - name: Upload APK
         uses: actions/upload-artifact@v4
