@@ -12,15 +12,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Этот шаг — секретное оружие, он сам настроит Gradle
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
       - name: Create Project Structure
         run: |
+          # 1. Создаем папки
           mkdir -p app/src/main/java/com/ducklumo
+          
+          # 2. Корневой settings.gradle
           echo "include ':app'" > settings.gradle
           
+          # 3. Корневой build.gradle
           cat <<EOF > build.gradle
           buildscript {
               repositories { google(); mavenCentral() }
@@ -31,6 +31,7 @@ jobs:
           }
           EOF
 
+          # 4. build.gradle для модуля app
           cat <<EOF > app/build.gradle
           plugins { id 'com.android.application' }
           android {
@@ -46,6 +47,7 @@ jobs:
           }
           EOF
 
+          # 5. Манифест
           cat <<EOF > app/src/main/AndroidManifest.xml
           <?xml version="1.0" encoding="utf-8"?>
           <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -61,6 +63,7 @@ jobs:
           </manifest>
           EOF
 
+          # 6. Код MainActivity
           cat <<EOF > app/src/main/java/com/ducklumo/MainActivity.kt
           package com.ducklumo
           import android.os.Bundle
@@ -80,9 +83,14 @@ jobs:
           }
           EOF
 
-      - name: Build with Gradle
-        run: gradle assembleDebug
+      - name: Setup Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.2
 
+      - name: Build APK
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+        
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
