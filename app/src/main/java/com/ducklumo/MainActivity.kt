@@ -1,4 +1,4 @@
-package com.ducklumo.app
+package com.ducklumo
 
 import android.os.Bundle
 import android.webkit.WebView
