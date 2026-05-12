@@ -11,15 +11,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Setup Project and Gradle
+      - name: Create Project Structure
         run: |
-          # Создаем настройки проекта
-          echo "include ':app'" > settings.gradle
-          
-          # Генерируем правильный gradlew программно внутри сервера
-          gradle wrapper --gradle-version 8.2
-          
+          # Сначала создаем все папки
           mkdir -p app/src/main/java/com/ducklumo
+          
+          # Затем создаем файлы настроек
+          echo "include ':app'" > settings.gradle
           
           cat <<EOF > build.gradle
           buildscript {
@@ -36,7 +34,13 @@ jobs:
           android {
               namespace 'com.ducklumo'
               compileSdk 34
-              defaultConfig { applicationId "com.ducklumo"; minSdk 24; targetSdk 34; versionCode 1; versionName "1.0" }
+              defaultConfig { 
+                  applicationId "com.ducklumo"
+                  minSdk 24
+                  targetSdk 34
+                  versionCode 1
+                  versionName "1.0"
+              }
           }
           EOF
 
@@ -73,6 +77,9 @@ jobs:
               }
           }
           EOF
+
+      - name: Setup Gradle
+        run: gradle wrapper --gradle-version 8.2
 
       - name: Build APK
         run: |
